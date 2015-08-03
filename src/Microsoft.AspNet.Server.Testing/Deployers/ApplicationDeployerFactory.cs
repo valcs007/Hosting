@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.Framework.Logging;
+using Microsoft.AspNet.Testing;
 
 namespace Microsoft.AspNet.Server.Testing
 {
@@ -32,6 +33,11 @@ namespace Microsoft.AspNet.Server.Testing
             if (deploymentParameters.RuntimeFlavor == RuntimeFlavor.Mono)
             {
                 return new MonoDeployer(deploymentParameters, logger);
+            }
+
+            if (!TestPlatformHelper.IsWindows)
+            {
+                return new UnixCoreClrDeployer(deploymentParameters, logger);
             }
 
             switch (deploymentParameters.ServerType)
