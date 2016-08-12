@@ -10,11 +10,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Hosting.Views;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.StackTrace.Sources;
 
 namespace Microsoft.AspNetCore.Hosting.Internal
 {
@@ -168,15 +170,27 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 // Generate an HTML error page.
                 var hostingEnv = _applicationServices.GetRequiredService<IHostingEnvironment>();
                 var showDetailedErrors = hostingEnv.IsDevelopment() || _options.DetailedErrors;
-                var errorBytes = StartupExceptionPage.GenerateErrorHtml(showDetailedErrors, ex);
 
+                var model = new ErrorPageModel();
+                if (showDetailedErrors)
+                {
+                    var exceptionDetailProvider = new ExceptionDetailsProvider(
+                        hostingEnv.ContentRootFileProvider,
+                        sourceCodeLineCount: 6);
+
+                    model.ErrorDetails = exceptionDetailProvider.GetDetails(ex);
+                }
+                else
+                {
+                    model.ErrorDetails = new ExceptionDetails[] { };
+                }
+
+                var errorPage = new ErrorPage(model);
                 return context =>
                 {
                     context.Response.StatusCode = 500;
                     context.Response.Headers["Cache-Control"] = "private, max-age=0";
-                    context.Response.ContentType = "text/html; charset=utf-8";
-                    context.Response.ContentLength = errorBytes.Length;
-                    return context.Response.Body.WriteAsync(errorBytes, 0, errorBytes.Length);
+                    return errorPage.ExecuteAsync(context);
                 };
             }
         }
