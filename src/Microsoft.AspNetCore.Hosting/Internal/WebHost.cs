@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Builder;
@@ -172,6 +174,23 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 var showDetailedErrors = hostingEnv.IsDevelopment() || _options.DetailedErrors;
 
                 var model = new ErrorPageModel();
+                var runtimeType = Microsoft.Extensions.Internal.RuntimeEnvironment.RuntimeType;
+                model.RuntimeDisplayName = (runtimeType == "CoreCLR") ? ".NET Core" : runtimeType == "CLR" ? ".NET Framework" : "Mono";
+#if NETSTANDARD1_3
+                var systemRuntimeAssembly = typeof(System.ComponentModel.DefaultValueAttribute).GetTypeInfo().Assembly;
+                var assemblyVersion = new AssemblyName(systemRuntimeAssembly.FullName).Version.ToString();
+                var clrVersion = assemblyVersion;
+#else
+                var clrVersion = Environment.Version.ToString();
+#endif
+                model.RuntimeArchitecture = RuntimeInformation.ProcessArchitecture.ToString();
+                var currentAssembly = typeof(ErrorPage).GetTypeInfo().Assembly;
+                model.CurrentAssemblyVesion = currentAssembly
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    .InformationalVersion;
+                model.ClrVersion = clrVersion;
+                model.OperatingSystemDescription = RuntimeInformation.OSDescription;
+
                 if (showDetailedErrors)
                 {
                     var exceptionDetailProvider = new ExceptionDetailsProvider(
@@ -182,14 +201,14 @@ namespace Microsoft.AspNetCore.Hosting.Internal
                 }
                 else
                 {
-                    model.ErrorDetails = new ExceptionDetails[] { };
+                    model.ErrorDetails = new ExceptionDetails[0];
                 }
 
                 var errorPage = new ErrorPage(model);
                 return context =>
                 {
                     context.Response.StatusCode = 500;
-                    context.Response.Headers["Cache-Control"] = "private, max-age=0";
+                    context.Response.Headers["Cache-Control"] = "no-cache";
                     return errorPage.ExecuteAsync(context);
                 };
             }

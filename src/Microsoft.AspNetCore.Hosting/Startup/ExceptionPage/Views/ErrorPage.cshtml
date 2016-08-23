@@ -156,5 +156,8 @@
             <%$ include: ErrorPage.js %>
             //-->
         </script>
-    </body>
+        <footer>
+            @Model.RuntimeDisplayName @Model.RuntimeArchitecture v@(Model.ClrVersion) &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Microsoft.AspNetCore.Hosting version @Model.CurrentAssemblyVesion &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; @Model.OperatingSystemDescription &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="http://go.microsoft.com/fwlink/?LinkId=517394">Need help?</a>
+        </footer>
+</body>
 </html>

@@ -15,5 +15,15 @@ namespace Microsoft.AspNetCore.Hosting.Views
         /// Detailed information about each exception in the stack.
         /// </summary>
         public IEnumerable<ExceptionDetails> ErrorDetails { get; set; }
+
+        public string RuntimeDisplayName { get; set; }
+
+        public string RuntimeArchitecture { get; set; }
+
+        public string ClrVersion { get; set; }
+
+        public string CurrentAssemblyVesion { get; set; }
+
+        public string OperatingSystemDescription { get; set; }
     }
 }
